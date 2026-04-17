@@ -1,0 +1,28 @@
+/* Circuit Trace — signal pulse animation
+ * Required by components/CircuitTrace.tsx
+ * Append to globals.css (Tailwind v4) or import as a standalone stylesheet.
+ */
+
+.circuit-pulse {
+  animation-name: circuit-pulse;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  stroke-dashoffset: 0;
+  will-change: stroke-dashoffset;
+}
+
+@keyframes circuit-pulse {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -2270;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .circuit-pulse {
+    animation: none;
+    opacity: 0.35;
+  }
+}
