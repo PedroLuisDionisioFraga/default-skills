@@ -35,7 +35,7 @@ Notes:
 ## About (right-edge corner, desktop only)
 
 ```tsx
-<section className="relative overflow-hidden bg-[color:var(--bg)] px-6 py-24 lg:px-16 lg:py-32">
+<section className="relative overflow-hidden bg-[color:var(--bg)] px-6 py-10 lg:px-16 lg:py-16">
   <div className="pointer-events-none absolute -right-24 top-1/2 hidden h-[520px] w-[520px] -translate-y-1/2 lg:block">
     <CircuitTrace variant="corner" seed={41} intensity="subtle" />
   </div>
@@ -49,7 +49,7 @@ Notes:
 ## Services (top edge strip)
 
 ```tsx
-<section className="relative overflow-hidden bg-[color:var(--surface-muted)] px-6 py-24 lg:px-16 lg:py-32">
+<section className="relative overflow-hidden bg-[color:var(--surface-muted)] px-6 py-10 lg:px-16 lg:py-16">
   <div className="pointer-events-none absolute inset-x-0 top-0 h-48">
     <CircuitTrace variant="edge" seed={23} intensity="subtle" />
   </div>
@@ -63,7 +63,7 @@ Notes:
 ## Cases (left corner + bottom edge)
 
 ```tsx
-<section className="relative overflow-hidden bg-[color:var(--bg)] px-6 py-24 lg:px-16 lg:py-32">
+<section className="relative overflow-hidden bg-[color:var(--bg)] px-6 py-10 lg:px-16 lg:py-16">
   <div className="pointer-events-none absolute -left-24 top-24 hidden h-[520px] w-[520px] lg:block">
     <CircuitTrace variant="corner" seed={53} intensity="subtle" />
   </div>
@@ -80,7 +80,7 @@ Notes:
 ## Contact (two corners — replaces any blur-blob decoration)
 
 ```tsx
-<section className="relative overflow-hidden bg-[color:var(--surface-muted)] px-6 py-24 lg:px-16 lg:py-32">
+<section className="relative overflow-hidden bg-[color:var(--surface-muted)] px-6 py-10 lg:px-16 lg:py-16">
   <div className="pointer-events-none absolute -right-20 -top-20 h-[520px] w-[520px]">
     <CircuitTrace variant="corner" seed={67} intensity="normal" />
   </div>
