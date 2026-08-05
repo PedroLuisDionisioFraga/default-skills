@@ -1,0 +1,30 @@
+{
+  "skill_name": "esp32-firmware-engineer",
+  "notes": "Prompts em portugues por refletirem o uso real do Pedro; a skill esta em ingles, entao o caso testa tambem se o padrao dispara com o pedido em outro idioma. Alvo: o padrao single-owner-io adicionado em 2026-08-04. Sem assertions ainda.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "new-owner-multi-writer",
+      "prompt": "preciso adicionar um buzzer no IO4 desse projeto (esp32c6, o fw do controlador de luminaria). ele tem que apitar em tres situacoes: quando o notification_manager tiver qualquer erro ativo no error_mask, quando o cara segurar o botao no gesto de factory reset (pra confirmar antes de apagar a nvs), e tambem quero poder disparar um beep de teste vindo do mqtt. cria o componente pra mim",
+      "expected_output": "Um componente que assume a posse do buzzer: worker task unica escritora do GPIO/LEDC, event group com bit de requisicao, helpers _request_*, e setters assincronos chamados pelos tres contextos. Deve nomear explicitamente quem e o dono e nao deixar notification_manager / btn_task / MQTT escreverem o hardware direto. Deve declarar os trade-offs (setter assincrono) e a ordem de init (worker antes do button_init).",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "review-racy-fan",
+      "prompt": "cara, esse controlador de ventoinha aqui ta me dando dor de cabeca. em campo ele as vezes liga e desliga sozinho, ou fica ligado quando devia estar desligado, mas na bancada eu nunca consigo reproduzir. ja olhei mil vezes e nao acho. da uma revisada pra mim?",
+      "expected_output": "Deve identificar que o relé da ventoinha tem quatro escritores (timer de poll, MQTT set_profile, MQTT force, botao toggle) sem dono unico; que _update() faz le is_on -> ESP_LOGI (bloqueia na UART) -> decide -> escreve, com a amostra envelhecida; e que fan_controller_toggle() e um read-modify-write nao idempotente fora do dono. Deve propor serializar num worker, nao alargar o cfg_mutex. Bonus: notar que o sintoma 'nao reproduz na bancada' e assinatura de corrida.",
+      "files": [
+        "evals/files/fan_controller.c",
+        "evals/files/fan_controller.h"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "no-worker-single-writer",
+      "prompt": "quero adicionar um rele auxiliar no IO8. por enquanto so o actuator_manager vai mexer nele: quando a luminaria liga, o auxiliar liga junto; quando desliga, desliga junto. faz esse componente",
+      "expected_output": "NAO deve criar uma task/worker nova. O correto e reusar components/devices/relay (ja existe e faz exatamente isso) como segunda instancia, e acionar do worker que o actuator_manager ja tem, dentro do _apply_relay existente. Testa se a skill sabe quando NAO aplicar o padrao: escritor unico, componente abaixo de um dono que ja existe.",
+      "files": []
+    }
+  ]
+}
