@@ -162,7 +162,7 @@ Two implementations in this repository converged on this shape independently. Re
 
 - **`components/app/managers/notification/notification_manager.c`** — the simpler variant. Four LEDs, several producer subsystems, bits only and no payload. Shows the zone comments almost verbatim, `_out_eq`/`_apply` change detection per LED, the impossible-value seed, and a purely reactive `portMAX_DELAY` worker.
 
-- **`components/app/actuator-manager/actuator_manager.c`** — the full variant. Adds a payload field for schedule-bypassing manual commands (including a `TOGGLE` resolved inside the worker), a finite wait timeout that replaced a software timer, a mutex coexisting for the multi-word schedule snapshot, and an explicit INVARIANT comment above `_apply_relay()` naming who may call it. `docs/state-machine-time-table.md` traces the same failure modes against real line numbers, including why the stale sample in the check-then-act is safe once the invariant holds.
+- **`components/app/actuator-manager/src/actuator_manager.c`** — the full variant. Adds a payload field for schedule-bypassing manual commands (including a `TOGGLE` resolved inside the worker), a finite wait timeout that replaced a software timer, a mutex coexisting for the multi-word schedule snapshot, and an explicit INVARIANT comment above `act_drive_relay()` naming who may call it. It is also this repo's one component split across several translation units — see `src/actuator_manager_priv.h` for how the private context is shared without becoming public. `docs/state-machine-time-table.md` traces the same failure modes against real line numbers, including why the stale sample in the check-then-act is safe once the invariant holds.
 
 ## Review checklist
 

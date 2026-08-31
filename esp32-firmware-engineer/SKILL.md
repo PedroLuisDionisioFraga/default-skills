@@ -1,6 +1,6 @@
 ---
 name: esp32-firmware-engineer
-description: ESP32 firmware engineering for ESP-IDF projects. Write, review, and debug embedded C/C++ code involving FreeRTOS tasks/queues/timers, GPIO/I2C/SPI/UART/ADC/PWM peripherals, TWAI/CAN, Wi-Fi/BLE networking, OTA updates, Secure Boot and flash encryption, LVGL display integration, build/flash/monitor workflows, logging, crash analysis, memory/code-size optimization, low-power sleep/wakeup design, on-device USB/serial service terminals, and board bring-up. Use when an agent is asked to implement ESP-IDF firmware features, review embedded changes for correctness or race conditions, investigate boot/runtime failures or Guru Meditation panics, interpret serial logs, fix build/link/flash problems, optimize RAM/flash usage, tune deep sleep/light sleep behavior, harden firmware for production, add a service console/CLI, integrate a display with LVGL, or diagnose hardware-software integration issues on ESP32-class devices.
+description: ESP32 firmware engineering for ESP-IDF projects. Write, review, and debug embedded C/C++ code involving FreeRTOS tasks/queues/timers, GPIO/I2C/SPI/UART/ADC/PWM peripherals, TWAI/CAN, Wi-Fi/BLE networking, OTA updates, Secure Boot and flash encryption, LVGL display integration, build/flash/monitor workflows, logging, crash analysis, memory/code-size optimization, low-power sleep/wakeup design, on-device USB/serial service terminals, and board bring-up. In fw_sbc-wxxx, also follow the split app-manager architecture (actuator-manager, mqtt-manager, event_store/S15/S17). Use when an agent is asked to implement ESP-IDF firmware features, review embedded changes for correctness or race conditions, investigate boot/runtime failures or Guru Meditation panics, interpret serial logs, fix build/link/flash problems, optimize RAM/flash usage, tune deep sleep/light sleep behavior, harden firmware for production, add a service console/CLI, integrate a display with LVGL, or diagnose hardware-software integration issues on ESP32-class devices.
 ---
 
 # ESP32 Firmware Engineer
@@ -107,6 +107,17 @@ Act as a senior ESP-IDF firmware engineer focused on correctness, debuggability,
 - The reference wrappers in this skill's `scripts/` are a starting point to *copy into* a project's own `scripts/` and adapt — they derive `PROJECT_DIR` from their own location and only detect `/dev/*` serial ports, so they do not work when run in place or on Windows. Do not run them from `.claude/skills/`.
 - Use the plugin compatibility checker in `scripts/check_plugin_compatibility.py` (or equivalent project preflight) to generate a concrete evidence report before build.
 
+## fw_sbc-wxxx (this repo)
+
+When editing `components/app/actuator-manager`, `components/app/managers/mqtt-manager`, or DEF-C71 MQTT/events:
+
+- Read `references/fw-sbc-wxxx-app-architecture.md` first — split-component layout, layering, S15/S17/event_store flow, and which file owns each concern.
+- **actuator-manager** owns the relay worker, schedule modes, B28 override, and button; split across `src/actuator_manager_*.c` with `actuator_manager_priv.h`.
+- **mqtt-manager** owns DEF-C71 inbound handlers and S15 outbound; split across `src/mqtt_manager*.c` with `mqtt_manager_priv.h`. No second task — handlers run on the esp-mqtt event task.
+- Do not put S15 debounce logic in inbound handler files; do not put relay writes in mqtt-manager.
+- Large MQTT response buffers stay file-static in the handler TU (especially S43/S15), not on the handler stack.
+- `mqtt_manager_init()` must stay before `communication_manager_init()` (topic table registration before `mqtt_service_init()`).
+
 ## Logging Defaults
 
 - Reduce noisy library/default component logs when they obscure diagnosis (often by raising their log level threshold).
@@ -128,6 +139,7 @@ Act as a senior ESP-IDF firmware engineer focused on correctness, debuggability,
 - Read `references/panic-log-triage.md` for panic, reset, and logging triage patterns.
 - Read `references/rtos-patterns.md` for FreeRTOS tasking, ISR handoff, timers, watchdog-safe concurrency, and dual-core concerns.
 - Read `references/single-owner-io.md` before writing or reviewing any component that drives an actuator, LED, relay, motor, or other output several contexts care about: naming the owner, the arbitrate-vs-execute boundary, the four ownership zones, event group vs queue vs mutex, and the race conditions this prevents.
+- Read `references/fw-sbc-wxxx-app-architecture.md` when working in this repo's app managers (actuator-manager, mqtt-manager, events/S15/S17, DEF-C71 handlers).
 - Read `references/communication-protocols.md` for ESP-IDF I2C/SPI/UART/TWAI patterns, bus ownership, timeouts, and recovery.
 - Read `references/memory-optimization.md` for heap capabilities, stack sizing, DMA-capable buffers, code-size analysis, and partition-aware memory decisions.
 - Read `references/power-optimization.md` for ESP32 sleep modes, wakeup sources, PM locks, wireless power strategy, and battery-aware behavior.
@@ -164,6 +176,8 @@ Act as a senior ESP-IDF firmware engineer focused on correctness, debuggability,
 - "Cut RAM/code size in this ESP-IDF component and review heap/stack usage"
 - "Design an OTA-compatible partition table for 16MB flash and update sdkconfig"
 - "My ESP32 display colors are wrong; verify pixel format/endianness and bus config"
+- "Add a DEF-C71 S17 handler fix in mqtt-manager"
+- "Split a new mqtt handler into its own translation unit like actuator_manager_relay.c"
 - "Add a friendly serial/USB terminal with settings commands and RTOS debug info"
 - "This project uses ESP-ADF and ESP-SR; prove the exact ESP-IDF version is compatible before building"
 - "Design an OTA update flow with rollback and anti-rollback for a field device"

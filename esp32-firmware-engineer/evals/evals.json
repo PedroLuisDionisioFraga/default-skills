@@ -1,13 +1,20 @@
 {
   "skill_name": "esp32-firmware-engineer",
-  "notes": "Prompts em portugues por refletirem o uso real do Pedro; a skill esta em ingles, entao o caso testa tambem se o padrao dispara com o pedido em outro idioma. Alvo: o padrao single-owner-io adicionado em 2026-08-04. Sem assertions ainda.",
+  "notes": "Prompts em portugues por refletirem o uso real do Pedro; a skill esta em ingles, entao o caso testa tambem se o padrao dispara com o pedido em outro idioma. Alvo: o padrao single-owner-io adicionado em 2026-08-04. Sem assertions ainda. CORRECAO 2026-08-11: assertion 1 do caso 0 reescrita — assumia erradamente que aplicar o padrao exige criar uma task; reusar um dono existente satisfaz o principio e e preferivel.",
   "evals": [
     {
       "id": 0,
       "name": "new-owner-multi-writer",
       "prompt": "preciso adicionar um buzzer no IO4 desse projeto (esp32c6, o fw do controlador de luminaria). ele tem que apitar em tres situacoes: quando o notification_manager tiver qualquer erro ativo no error_mask, quando o cara segurar o botao no gesto de factory reset (pra confirmar antes de apagar a nvs), e tambem quero poder disparar um beep de teste vindo do mqtt. cria o componente pra mim",
       "expected_output": "Um componente que assume a posse do buzzer: worker task unica escritora do GPIO/LEDC, event group com bit de requisicao, helpers _request_*, e setters assincronos chamados pelos tres contextos. Deve nomear explicitamente quem e o dono e nao deixar notification_manager / btn_task / MQTT escreverem o hardware direto. Deve declarar os trade-offs (setter assincrono) e a ordem de init (worker antes do button_init).",
-      "files": []
+      "files": [],
+      "assertions": [
+        "O buzzer tem um dono unico e identificado — task nova OU um dono ja existente reusado — e nenhuma outra funcao escreve o hardware do buzzer diretamente",
+        "Os tres contextos (notification_manager/error_mask, gesto de factory reset no btn_task, comando MQTT) chamam um setter/request do componente, nunca a API de hardware do buzzer",
+        "Usa event group (ou queue) com bit/mensagem de requisicao para acordar o worker, em vez de mutex compartilhado entre escritores",
+        "Documenta a ordem de init: event group e worker criados antes de qualquer contexto capaz de requisitar (button_init/MQTT)",
+        "RESPONSE.md declara que os setters sao assincronos e o que isso implica (ex.: getter logo apos setter pode ler valor antigo)"
+      ]
     },
     {
       "id": 1,
@@ -17,6 +24,13 @@
       "files": [
         "evals/files/fan_controller.c",
         "evals/files/fan_controller.h"
+      ],
+      "assertions": [
+        "Identifica que o rele da ventoinha tem multiplos escritores, nomeando ao menos tres dos quatro (_poll_timer_cb, fan_controller_set_profile, fan_controller_force, fan_controller_toggle)",
+        "Identifica o check-then-act em _update(): is_on amostrado antes do ESP_LOGI (que bloqueia na UART) e usado depois, com a amostra envelhecida",
+        "Identifica fan_controller_toggle() como read-modify-write nao idempotente executado fora do dono",
+        "Conecta o sintoma relatado ('nao reproduz na bancada, so acontece em campo') a uma janela de corrida, em vez de tratar como falha de hardware/sensor",
+        "Propoe serializar as escritas num dono unico; NAO propoe alargar cfg_mutex para cobrir a sequencia nem segurar lock durante o I/O do rele"
       ]
     },
     {
@@ -24,7 +38,13 @@
       "name": "no-worker-single-writer",
       "prompt": "quero adicionar um rele auxiliar no IO8. por enquanto so o actuator_manager vai mexer nele: quando a luminaria liga, o auxiliar liga junto; quando desliga, desliga junto. faz esse componente",
       "expected_output": "NAO deve criar uma task/worker nova. O correto e reusar components/devices/relay (ja existe e faz exatamente isso) como segunda instancia, e acionar do worker que o actuator_manager ja tem, dentro do _apply_relay existente. Testa se a skill sabe quando NAO aplicar o padrao: escritor unico, componente abaixo de um dono que ja existe.",
-      "files": []
+      "files": [],
+      "assertions": [
+        "NAO cria task/worker FreeRTOS nova para o rele auxiliar",
+        "Reusa o componente existente components/devices/relay em vez de escrever um driver de rele novo do zero",
+        "Aciona o rele auxiliar a partir do worker que o actuator_manager ja possui (dentro de _apply_relay ou equivalente), nao de um caminho paralelo",
+        "Explica por que nenhum dono/worker novo e necessario aqui (escritor unico, componente abaixo de um dono ja existente)"
+      ]
     }
   ]
 }

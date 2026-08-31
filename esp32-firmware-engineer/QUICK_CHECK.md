@@ -54,6 +54,7 @@ Use this before doing implementation, review, debugging, or bring-up work with t
 - [ ] Keep changes small and ESP-IDF idiomatic.
 - [ ] Treat ISR safety, FreeRTOS context correctness, and watchdog behavior as first-class.
 - [ ] Name the owning component for every hardware output; confirm its worker task is the only writer and that no `read -> decide -> write` sequence spans a blocking call (`references/single-owner-io.md`).
+- [ ] For app-manager changes in this repo, confirm the edit lands in the correct split file (`references/fw-sbc-wxxx-app-architecture.md`).
 - [ ] Propagate/check `esp_err_t` and add actionable logs (`ESP_LOGx` tags + error context).
 - [ ] Verify resource lifecycle (init/deinit, handlers, semaphores, sockets/NVS/driver handles).
 - [ ] Validate pin/peripheral conflicts, timing/clock assumptions, and bus ownership.
@@ -105,5 +106,5 @@ Project specifics:
 ## Helpful Skill Assets
 
 - Skill definition: `SKILL.md`
-- References: `references/`
+- References: `references/` (start with `fw-sbc-wxxx-app-architecture.md` for actuator/mqtt work in this repo)
 - Templates: `assets/templates/`
